@@ -43,16 +43,16 @@ func TestListParseTimeFlag(t *testing.T) {
 		default:
 			s = c
 		}
-		got, err := parseTimeFlag(s)
+		got, err := parseAuditTimeFlag(s)
 		if err != nil {
-			t.Fatalf("parseTimeFlag(%q) error: %v", s, err)
+			t.Fatalf("parseAuditTimeFlag(%q) error: %v", s, err)
 		}
 		if got.Year() != 2025 {
-			t.Fatalf("parseTimeFlag(%q) year=%d, want 2025", s, got.Year())
+			t.Fatalf("parseAuditTimeFlag(%q) year=%d, want 2025", s, got.Year())
 		}
 	}
 
-	if _, err := parseTimeFlag("not-a-date"); err == nil {
+	if _, err := parseAuditTimeFlag("not-a-date"); err == nil {
 		t.Fatalf("expected error")
 	}
 }

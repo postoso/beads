@@ -1307,7 +1307,7 @@ func TestFormatIssueCompactBlockedIcon(t *testing.T) {
 	})
 }
 
-func TestParseTimeFlag(t *testing.T) {
+func TestParseAuditTimeFlag(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name    string
@@ -1332,9 +1332,9 @@ func TestParseTimeFlag(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := parseTimeFlag(tt.input)
+			_, err := parseAuditTimeFlag(tt.input)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("parseTimeFlag(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+				t.Errorf("parseAuditTimeFlag(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
 			}
 		})
 	}

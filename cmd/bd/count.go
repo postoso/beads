@@ -134,7 +134,7 @@ func parseCountRequest(cmd *cobra.Command) (issueops.CountRequest, issueops.Coun
 		if raw == "" {
 			continue
 		}
-		parsed, err := parseTimeFlag(raw)
+		parsed, err := parseAuditTimeFlag(raw)
 		if err != nil {
 			return issueops.CountRequest{}, "", HandleErrorRespectJSON("parsing --%s: %v", bound.flag, err)
 		}

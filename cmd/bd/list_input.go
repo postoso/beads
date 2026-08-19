@@ -164,34 +164,34 @@ func gatherListInput(cmd *cobra.Command) (listInput, error) {
 	in.OverdueFlag, _ = cmd.Flags().GetBool("overdue")
 
 	var err error
-	if in.CreatedAfter, err = parseListTimeFlag(cmd, "created-after"); err != nil {
+	if in.CreatedAfter, err = parseListTimeFlag(cmd, "created-after", parseAuditTimeFlag); err != nil {
 		return in, err
 	}
-	if in.CreatedBefore, err = parseListTimeFlag(cmd, "created-before"); err != nil {
+	if in.CreatedBefore, err = parseListTimeFlag(cmd, "created-before", parseAuditTimeFlag); err != nil {
 		return in, err
 	}
-	if in.UpdatedAfter, err = parseListTimeFlag(cmd, "updated-after"); err != nil {
+	if in.UpdatedAfter, err = parseListTimeFlag(cmd, "updated-after", parseAuditTimeFlag); err != nil {
 		return in, err
 	}
-	if in.UpdatedBefore, err = parseListTimeFlag(cmd, "updated-before"); err != nil {
+	if in.UpdatedBefore, err = parseListTimeFlag(cmd, "updated-before", parseAuditTimeFlag); err != nil {
 		return in, err
 	}
-	if in.ClosedAfter, err = parseListTimeFlag(cmd, "closed-after"); err != nil {
+	if in.ClosedAfter, err = parseListTimeFlag(cmd, "closed-after", parseAuditTimeFlag); err != nil {
 		return in, err
 	}
-	if in.ClosedBefore, err = parseListTimeFlag(cmd, "closed-before"); err != nil {
+	if in.ClosedBefore, err = parseListTimeFlag(cmd, "closed-before", parseAuditTimeFlag); err != nil {
 		return in, err
 	}
-	if in.DeferAfter, err = parseListTimeFlag(cmd, "defer-after"); err != nil {
+	if in.DeferAfter, err = parseListTimeFlag(cmd, "defer-after", parseScheduleTimeFlag); err != nil {
 		return in, err
 	}
-	if in.DeferBefore, err = parseListTimeFlag(cmd, "defer-before"); err != nil {
+	if in.DeferBefore, err = parseListTimeFlag(cmd, "defer-before", parseScheduleTimeFlag); err != nil {
 		return in, err
 	}
-	if in.DueAfter, err = parseListTimeFlag(cmd, "due-after"); err != nil {
+	if in.DueAfter, err = parseListTimeFlag(cmd, "due-after", parseScheduleTimeFlag); err != nil {
 		return in, err
 	}
-	if in.DueBefore, err = parseListTimeFlag(cmd, "due-before"); err != nil {
+	if in.DueBefore, err = parseListTimeFlag(cmd, "due-before", parseScheduleTimeFlag); err != nil {
 		return in, err
 	}
 
@@ -355,12 +355,15 @@ func gatherListInput(cmd *cobra.Command) (listInput, error) {
 	return in, nil
 }
 
-func parseListTimeFlag(cmd *cobra.Command, name string) (*time.Time, error) {
+// parseListTimeFlag reads a date-bound flag and parses it with parse, which is
+// named explicitly at each call site so a new bound cannot inherit the wrong
+// timezone contract by resembling an existing flag name.
+func parseListTimeFlag(cmd *cobra.Command, name string, parse func(string) (time.Time, error)) (*time.Time, error) {
 	s, _ := cmd.Flags().GetString(name)
 	if s == "" {
 		return nil, nil
 	}
-	t, err := parseTimeFlag(s)
+	t, err := parse(s)
 	if err != nil {
 		return nil, HandleError("parsing --%s: %v", name, err)
 	}

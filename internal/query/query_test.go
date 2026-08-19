@@ -922,3 +922,51 @@ func TestMetadataPredicateEvaluation(t *testing.T) {
 		t.Error("predicate should match closed issue via OR")
 	}
 }
+
+// TestDateComparisonBoundsResolveInUTC pins the query-language half of #5823.
+// Every time field the language exposes (created, updated, closed, started) is
+// an audit column stored in UTC, so a bare date names the UTC day on any host.
+// The zone arrives through the evaluator's reference clock, never the machine's.
+func TestDateComparisonBoundsResolveInUTC(t *testing.T) {
+	for _, loc := range []*time.Location{
+		time.UTC,
+		time.FixedZone("EDT", -4*60*60),
+		time.FixedZone("LINT", 14*60*60),
+	} {
+		eval := NewEvaluator(time.Date(2026, 8, 16, 20, 13, 18, 0, loc))
+		got, err := eval.parseTimeValue(&ComparisonNode{Field: "created", Op: OpGreater, Value: "2026-08-17"})
+		if err != nil {
+			t.Fatalf("parseTimeValue with now in %v: %v", loc, err)
+		}
+		want := time.Date(2026, 8, 17, 0, 0, 0, 0, time.UTC)
+		if !got.Equal(want) {
+			t.Errorf("created>'2026-08-17' with now in %v resolved to %v, want %v", loc, got, want)
+		}
+	}
+}
+
+// TestRelativeQueryBoundsStayAnchoredToNow is the other half of the contract.
+// docs/cli-reference/query.md advertises natural language for date values, and
+// resolving it against a UTC-shifted clock moves "next monday" by up to a week.
+func TestRelativeQueryBoundsStayAnchoredToNow(t *testing.T) {
+	edt := time.FixedZone("EDT", -4*60*60)
+	// Sunday 20:00 EDT is already Monday 00:00 UTC.
+	eval := NewEvaluator(time.Date(2026, 8, 16, 20, 0, 0, 0, edt))
+
+	for _, tt := range []struct {
+		value string
+		want  time.Time
+	}{
+		{"next monday", time.Date(2026, 8, 18, 0, 0, 0, 0, time.UTC)},
+		{"tomorrow", time.Date(2026, 8, 18, 0, 0, 0, 0, time.UTC)},
+		{"2026-08-17T09:30:00", time.Date(2026, 8, 17, 13, 30, 0, 0, time.UTC)},
+	} {
+		got, err := eval.parseTimeValue(&ComparisonNode{Field: "created", Op: OpGreater, Value: tt.value})
+		if err != nil {
+			t.Fatalf("parseTimeValue(%q): %v", tt.value, err)
+		}
+		if !got.Equal(tt.want) {
+			t.Errorf("created>%q resolved to %v, want %v", tt.value, got, tt.want)
+		}
+	}
+}

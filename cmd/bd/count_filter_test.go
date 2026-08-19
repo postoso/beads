@@ -82,14 +82,11 @@ func TestParseCountRequestCarriesEveryFilterFlag(t *testing.T) {
 		t.Errorf("group = %q with no --by-* flag, want the scalar count", group)
 	}
 
-	// parseTimeFlag resolves a bare date in the LOCAL zone, which is what a
-	// user typing --created-after 2026-01-01 means, then normalizes the
-	// representation to UTC so the storage layer binds the same instant on
-	// every backend. The expectation constructs local midnight and converts,
-	// so a change to either half of that contract shows up here instead of
-	// shifting every bound by the test machine's offset.
+	// Bare audit dates are UTC boundaries, independent of time.Local. All of
+	// bd count's bounds are audit fields, so a bound that starts tracking the
+	// test machine's offset again shows up here.
 	day := func(d int) *time.Time {
-		stamp := time.Date(2026, 1, d, 0, 0, 0, 0, time.Local).UTC()
+		stamp := time.Date(2026, 1, d, 0, 0, 0, 0, time.UTC)
 		return &stamp
 	}
 	priority, min, max := 1, 0, 4

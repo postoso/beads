@@ -615,8 +615,10 @@ func (e *Evaluator) parseTimeValue(comp *ComparisonNode) (time.Time, error) {
 		// We parse as relative to now, going backwards
 		return e.parseDurationAgo(comp.Value)
 	}
-	// Otherwise use the standard time parser
-	return timeparsing.ParseRelativeTime(comp.Value, e.now)
+	// Otherwise use the standard time parser. Every time field the language
+	// exposes (created, updated, closed, started) is an audit column stored in
+	// UTC, so a bare date names the UTC day; relative forms stay on e.now.
+	return timeparsing.ParseRelativeTimeWithDateLocation(comp.Value, e.now, time.UTC)
 }
 
 // parseDurationAgo parses a duration and returns now - duration.

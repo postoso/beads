@@ -106,42 +106,42 @@ func runSearchProxiedServer(cmd *cobra.Command, ctx context.Context, args []stri
 	}
 
 	if createdAfter != "" {
-		t, err := parseTimeFlag(createdAfter)
+		t, err := parseAuditTimeFlag(createdAfter)
 		if err != nil {
 			return HandleErrorRespectJSON("parsing --created-after: %v", err)
 		}
 		filter.CreatedAfter = &t
 	}
 	if createdBefore != "" {
-		t, err := parseTimeFlag(createdBefore)
+		t, err := parseAuditTimeFlag(createdBefore)
 		if err != nil {
 			return HandleErrorRespectJSON("parsing --created-before: %v", err)
 		}
 		filter.CreatedBefore = &t
 	}
 	if updatedAfter != "" {
-		t, err := parseTimeFlag(updatedAfter)
+		t, err := parseAuditTimeFlag(updatedAfter)
 		if err != nil {
 			return HandleErrorRespectJSON("parsing --updated-after: %v", err)
 		}
 		filter.UpdatedAfter = &t
 	}
 	if updatedBefore != "" {
-		t, err := parseTimeFlag(updatedBefore)
+		t, err := parseAuditTimeFlag(updatedBefore)
 		if err != nil {
 			return HandleErrorRespectJSON("parsing --updated-before: %v", err)
 		}
 		filter.UpdatedBefore = &t
 	}
 	if closedAfter != "" {
-		t, err := parseTimeFlag(closedAfter)
+		t, err := parseAuditTimeFlag(closedAfter)
 		if err != nil {
 			return HandleErrorRespectJSON("parsing --closed-after: %v", err)
 		}
 		filter.ClosedAfter = &t
 	}
 	if closedBefore != "" {
-		t, err := parseTimeFlag(closedBefore)
+		t, err := parseAuditTimeFlag(closedBefore)
 		if err != nil {
 			return HandleErrorRespectJSON("parsing --closed-before: %v", err)
 		}

@@ -13,11 +13,32 @@ import (
 	"github.com/steveyegge/beads/internal/ui"
 )
 
-// parseTimeFlag parses time strings using the layered time parsing architecture.
-// Supports compact durations (+6h, -1d), natural language (tomorrow, next monday),
-// and absolute formats (2006-01-02, RFC3339).
-func parseTimeFlag(s string) (time.Time, error) {
-	return timeparsing.ParseRelativeTime(s, time.Now())
+// parseAuditTimeFlag parses a bound on an audit timestamp (created, updated,
+// closed). Those columns are stored and displayed in UTC, so a bare YYYY-MM-DD
+// names the UTC day: otherwise the same command against the same database
+// selects different rows depending on the host's timezone.
+//
+// Supports compact durations (+6h, -1d), natural language (tomorrow, next
+// monday), and absolute formats (2006-01-02, RFC3339). Everything except the
+// bare date is unchanged and still resolves against the local clock.
+func parseAuditTimeFlag(s string) (time.Time, error) {
+	return parseAuditTimeAt(s, time.Now())
+}
+
+func parseAuditTimeAt(s string, now time.Time) (time.Time, error) {
+	return timeparsing.ParseRelativeTimeWithDateLocation(s, now, time.UTC)
+}
+
+// parseScheduleTimeFlag parses a bound on a scheduling timestamp (due_at,
+// defer_until). Those are civil dates: bd show renders them in local time, and
+// --due/--defer read them in local time, so their bounds stay local too. A
+// bound naming the same date the user typed into --due has to select it.
+func parseScheduleTimeFlag(s string) (time.Time, error) {
+	return parseScheduleTimeAt(s, time.Now())
+}
+
+func parseScheduleTimeAt(s string, now time.Time) (time.Time, error) {
+	return timeparsing.ParseRelativeTime(s, now)
 }
 
 // pinIndicator returns a pushpin emoji prefix for pinned issues

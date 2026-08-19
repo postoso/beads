@@ -142,6 +142,21 @@ var dateOnlyRe = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 // Timezone-less inputs are interpreted in now's location. Returns the parsed
 // time in UTC or an error if no layer could parse the input.
 func ParseRelativeTime(s string, now time.Time) (time.Time, error) {
+	return ParseRelativeTimeWithDateLocation(s, now, now.Location())
+}
+
+// ParseRelativeTimeWithDateLocation is ParseRelativeTime with an explicit
+// location for the bare YYYY-MM-DD form. Callers whose bounds are compared
+// against columns stored in UTC pass time.UTC, so that a bare date names the
+// same instant on every host.
+//
+// Only the date-only form takes dateLocation. Compact durations, timezone-less
+// datetimes and natural language still resolve against now as given, because
+// those describe a position relative to wherever the caller is: resolving them
+// against a UTC clock moves "next monday" by up to a week once UTC has crossed
+// into the following day, and changes the calendar that AddDate walks for day,
+// week, month and year durations.
+func ParseRelativeTimeWithDateLocation(s string, now time.Time, dateLocation *time.Location) (time.Time, error) {
 	location := now.Location()
 
 	// Layer 1: Compact duration
@@ -154,7 +169,7 @@ func ParseRelativeTime(s string, now time.Time) (time.Time, error) {
 
 	// Try date-only format (YYYY-MM-DD)
 	if dateOnlyRe.MatchString(s) {
-		if t, err := time.ParseInLocation("2006-01-02", s, location); err == nil {
+		if t, err := time.ParseInLocation("2006-01-02", s, dateLocation); err == nil {
 			return t.UTC(), nil
 		}
 	}
