@@ -156,6 +156,44 @@ func TestOutputFormattedListBuffersTemplateExecution(t *testing.T) {
 	}
 }
 
+// GH#5722: the --format help promises output scoped to the dependencies whose
+// endpoints are both in the listing. These pin the two halves of that promise
+// that make empty output at exit 0 correct rather than a broken flag.
+func TestOutputFormattedListEdgeScope(t *testing.T) {
+	t.Parallel()
+
+	t.Run("edge leaving the listing", func(t *testing.T) {
+		t.Parallel()
+		issues := []*types.Issue{{ID: "inside"}}
+		deps := map[string][]*types.Dependency{
+			"inside": {{IssueID: "inside", DependsOnID: "outside", Type: types.DepBlocks}},
+		}
+
+		for _, format := range []string{"digraph", "{{.IssueID}} {{.DependsOnID}}"} {
+			var out bytes.Buffer
+			if err := outputFormattedList(&out, issues, deps, format); err != nil {
+				t.Fatalf("outputFormattedList(%q): %v", format, err)
+			}
+			if out.Len() != 0 {
+				t.Errorf("format %q printed %q for an edge leaving the listing, want nothing", format, out.String())
+			}
+		}
+	})
+
+	t.Run("template context is the edge", func(t *testing.T) {
+		t.Parallel()
+		issues, deps := listOutputFixture()
+		var out bytes.Buffer
+
+		if err := outputFormattedList(&out, issues, deps, "{{.ID}}"); err != nil {
+			t.Fatalf("outputFormattedList: %v", err)
+		}
+		if got, want := out.String(), "<no value>\n"; got != want {
+			t.Fatalf("{{.ID}} rendered %q, want %q: the template data is the edge, so there is no top-level .ID", got, want)
+		}
+	})
+}
+
 func TestOutputFormattedListWithNoEdgesDoesNotWrite(t *testing.T) {
 	t.Parallel()
 	writer := &graphFailWriter{err: io.ErrClosedPipe, failAt: 1}
