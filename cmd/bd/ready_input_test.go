@@ -392,6 +392,33 @@ func TestGatherReadyInputMapsReadyPassThroughFlags(t *testing.T) {
 	}
 }
 
+// TestGatherReadyInputAcceptsFlatAsPlainAlias pins GH#5680's flag-parity gap:
+// `bd list` spells the non-tree renderer --flat and `bd ready` spells it
+// --plain, so `bd ready --flat` failed outright and a script that rendered one
+// had to special-case the other. Either name now selects the plain renderer.
+func TestGatherReadyInputAcceptsFlatAsPlainAlias(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		args []string
+		want bool
+	}{
+		{"neither", nil, false},
+		{"plain", []string{"--plain"}, true},
+		{"flat", []string{"--flat"}, true},
+		{"both", []string{"--plain", "--flat"}, true},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			got := runGatherReadyInput(t, newReadyFlagsCommand(t, c.args...), nil)
+			if got.err != nil {
+				t.Fatalf("gatherReadyInput(%v) = %v, want no error", c.args, got.err)
+			}
+			if got.in.plainFormat != c.want {
+				t.Errorf("plainFormat = %v, want %v", got.in.plainFormat, c.want)
+			}
+		})
+	}
+}
+
 // TestGatherReadyInputUsageErrorsRespectJSON pins the one behavior change in
 // the collapse that the ready-filter golden structurally cannot see: the golden
 // was recorded with jsonOutput false, where HandleError and
