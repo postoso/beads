@@ -324,7 +324,12 @@ func runListCore(cmd *cobra.Command, _ []string) error {
 		if depErr != nil && in.depsMode != "" {
 			return HandleError("loading dependencies for --deps: %v", depErr)
 		}
-		displayPrettyListWithDepsMode(issues, false, allDeps, in.depsMode, truncated, in.ReadyFlag)
+		// The page arrived in the order --sort asked for. Render it in that
+		// order rather than letting the tree's priority/ID default overwrite
+		// it, which used to make `bd list --sort updated` exit 0 and print a
+		// normal-looking list in the wrong order (GH#5811). With no --sort the
+		// tree keeps its own stable order, so a bare `bd list` is unchanged.
+		displayPrettyListWithDepsModeOrder(issues, false, allDeps, in.depsMode, truncated, in.ReadyFlag, in.SortBy != "")
 		printTruncationHint(truncated, in.effectiveLimit)
 		printSkipLabelsFooter(in.SkipLabels)
 		return nil

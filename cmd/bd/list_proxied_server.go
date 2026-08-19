@@ -239,7 +239,9 @@ func renderProxiedListText(ctx context.Context, out io.Writer, issues []*types.I
 			printTruncationHint(truncated, in.effectiveLimit)
 			return nil
 		}
-		displayPrettyListWithDepsMode(issues, false, depsByIssueID, in.depsMode, truncated, in.ReadyFlag)
+		// Same ordering contract as the direct route (GH#5811): a page the
+		// user ordered with --sort renders in that order.
+		displayPrettyListWithDepsModeOrder(issues, false, depsByIssueID, in.depsMode, truncated, in.ReadyFlag, in.SortBy != "")
 		printTruncationHint(truncated, in.effectiveLimit)
 		printSkipLabelsFooter(in.SkipLabels)
 		return nil
