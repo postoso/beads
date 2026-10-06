@@ -226,17 +226,28 @@ func TestGatherInputRejectionsNameUnitSet(t *testing.T) {
 // TestRelativeTimeFlagUsagesNameUnitSet keeps --help in step with the rejection
 // hint. A caller should learn from `bd create --help`, before entering a value,
 // that +3m is months and +30min is minutes; +3m meant as minutes is accepted
-// silently, so no rejection would ever explain it.
+// silently, so no rejection would ever explain it. The list, search and count
+// window flags reach the same parser through parseTimeFlag.
 func TestRelativeTimeFlagUsagesNameUnitSet(t *testing.T) {
-	flags := []struct {
+	type cmdFlag struct {
 		cmd  *cobra.Command
 		flag string
-	}{
+	}
+	flags := []cmdFlag{
 		{deferCmd, "until"},
 		{createCmd, "due"},
 		{createCmd, "defer"},
 		{updateCmd, "due"},
 		{updateCmd, "defer"},
+		{listCmd, "defer-after"},
+		{listCmd, "defer-before"},
+		{listCmd, "due-after"},
+		{listCmd, "due-before"},
+	}
+	for _, c := range []*cobra.Command{listCmd, searchCmd, countCmd} {
+		for _, flag := range []string{"created-after", "created-before", "updated-after", "updated-before", "closed-after", "closed-before"} {
+			flags = append(flags, cmdFlag{c, flag})
+		}
 	}
 
 	for _, f := range flags {

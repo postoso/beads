@@ -369,12 +369,12 @@ func init() {
 	searchCmd.Flags().BoolP("reverse", "r", false, "Invert the sort field's default direction (created/updated/closed default to newest-first, so --sort updated --reverse is oldest-first)")
 
 	// Date range flags
-	searchCmd.Flags().String("created-after", "", "Filter issues created after date (YYYY-MM-DD or RFC3339)")
-	searchCmd.Flags().String("created-before", "", "Filter issues created before date (YYYY-MM-DD or RFC3339)")
-	searchCmd.Flags().String("updated-after", "", "Filter issues updated after date (YYYY-MM-DD or RFC3339)")
-	searchCmd.Flags().String("updated-before", "", "Filter issues updated before date (YYYY-MM-DD or RFC3339)")
-	searchCmd.Flags().String("closed-after", "", "Filter issues closed after date (YYYY-MM-DD or RFC3339)")
-	searchCmd.Flags().String("closed-before", "", "Filter issues closed before date (YYYY-MM-DD or RFC3339)")
+	searchCmd.Flags().String("created-after", "", "Filter issues created after date. Accepts RFC3339 or "+relativeTimeFormats)
+	searchCmd.Flags().String("created-before", "", "Filter issues created before date. Accepts RFC3339 or "+relativeTimeFormats)
+	searchCmd.Flags().String("updated-after", "", "Filter issues updated after date. Accepts RFC3339 or "+relativeTimeFormats)
+	searchCmd.Flags().String("updated-before", "", "Filter issues updated before date. Accepts RFC3339 or "+relativeTimeFormats)
+	searchCmd.Flags().String("closed-after", "", "Filter issues closed after date. Accepts RFC3339 or "+relativeTimeFormats)
+	searchCmd.Flags().String("closed-before", "", "Filter issues closed before date. Accepts RFC3339 or "+relativeTimeFormats)
 
 	// Priority range flags
 	searchCmd.Flags().String("priority-min", "", "Filter by minimum priority (inclusive, 0-4 or P0-P4)")
