@@ -837,7 +837,7 @@ func runRulesCompact(cmd *cobra.Command, args []string) error {
 			results = append(results, res)
 
 			if !jsonOutput {
-				printCompactPreview(outName, merged, groupRules, res.Applied, res.Error == "")
+				printCompactPreview(outName, merged, groupRules, apply, res.Applied, res.Error == "")
 			}
 		}
 
@@ -907,7 +907,7 @@ func runRulesCompact(cmd *cobra.Command, args []string) error {
 	if applyErr != nil && !written {
 		return HandleError("%v", applyErr)
 	}
-	printCompactPreview(outName, merged, groupRules, written, applyErr == nil)
+	printCompactPreview(outName, merged, groupRules, apply, written, applyErr == nil)
 	if applyErr != nil {
 		return HandleError("%v", applyErr)
 	}
@@ -920,10 +920,15 @@ func runRulesCompact(cmd *cobra.Command, args []string) error {
 const compactPreviewFooter = "Preview only, nothing written. Re-run with --force to write the composite and delete its source files."
 
 // printCompactPreview shows a composite and the source files it replaces.
-func printCompactPreview(outName, merged string, sources []RuleFile, applied, sourcesDeleted bool) {
-	if applied {
+// attempted is true when --force asked for the write, so a refused group is
+// not reported as a preview.
+func printCompactPreview(outName, merged string, sources []RuleFile, attempted, applied, sourcesDeleted bool) {
+	switch {
+	case applied:
 		fmt.Printf("Merged → %s:\n", outName)
-	} else {
+	case attempted:
+		fmt.Printf("Not written → %s:\n", outName)
+	default:
 		fmt.Printf("Preview merge → %s:\n", outName)
 	}
 	fmt.Println(strings.Repeat("─", 40))
@@ -938,6 +943,8 @@ func printCompactPreview(outName, merged string, sources []RuleFile, applied, so
 		fmt.Printf("Created %s, deleted %d source files: %s\n\n", outName, len(names), strings.Join(names, ", "))
 	case applied:
 		fmt.Printf("Created %s, but not every source file was deleted (see the error).\n\n", outName)
+	case attempted:
+		fmt.Printf("Nothing deleted: %s\n\n", strings.Join(names, ", "))
 	default:
 		fmt.Printf("Would delete: %s\n\n", strings.Join(names, ", "))
 	}

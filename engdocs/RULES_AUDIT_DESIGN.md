@@ -121,7 +121,8 @@ Re-running with `--force` writes the composite and deletes the sources. The
 confirmation is a flag rather than a `[y/N]` prompt so the command behaves the
 same in noninteractive workflows, the same shape as `bd delete --force`.
 Compact refuses to write a composite over an existing file, including one of
-its own sources.
+its own sources. `--group` stops at the refusal; `--auto` prints the refused
+group under `Not written → <file>:` and moves on to the next group.
 
 ---
 

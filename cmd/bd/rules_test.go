@@ -860,3 +860,36 @@ func TestRulesCompact_GroupJSONReportsPartialApply(t *testing.T) {
 		t.Errorf("want only the composite left, got %v", ruleFileNames(after))
 	}
 }
+
+// A --force run that refuses a group writes nothing, so its stdout must not
+// read as a preview. --group returns before printing; --auto keeps going to the
+// next group and labels the refused one instead.
+func TestRulesCompact_ForceRefusalIsNotReportedAsPreview(t *testing.T) {
+	for _, args := range [][]string{{"--auto"}, {"--group", "alpha,beta"}} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			dir := tempRulesDir(t)
+			writeRule(t, dir, "alpha", fmt.Sprintf(sharedDiskDirective, "Alpha", "alpha"))
+			writeRule(t, dir, "beta", fmt.Sprintf(sharedDiskDirective, "Beta", "beta"))
+			writeRule(t, dir, "disk", "# Storage quotas\n\n**Do:** keep quota alarms at eighty percent\n")
+
+			cmd := newRulesCompactTestCmd(t, append([]string{"--path", dir, "--force"}, args...)...)
+			out, err := captureStdoutWithError(t, func() error { return runRulesCompact(cmd, nil) })
+
+			if err == nil {
+				t.Fatal("expected compact to fail rather than overwrite disk.md")
+			}
+			for _, unwanted := range []string{"Preview merge", "Would delete"} {
+				if strings.Contains(out, unwanted) {
+					t.Errorf("refused --force run printed %q:\n%s", unwanted, out)
+				}
+			}
+			if args[0] == "--auto" {
+				for _, want := range []string{"Not written → disk.md:", "Nothing deleted: alpha.md, beta.md"} {
+					if !strings.Contains(out, want) {
+						t.Errorf("refused group output missing %q:\n%s", want, out)
+					}
+				}
+			}
+		})
+	}
+}
